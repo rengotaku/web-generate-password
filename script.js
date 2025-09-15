@@ -134,12 +134,43 @@ function calculateStrength(seconds) {
 function calculateCrackTime(password) {
     let charsetSize = 0;
     
-    // Calculate charset size based on what's in the password
-    if (/[a-z]/.test(password)) charsetSize += 26;
-    if (/[A-Z]/.test(password)) charsetSize += 26;
-    if (/[0-9]/.test(password)) charsetSize += 10;
-    if (/[!@#$]/.test(password)) charsetSize += 4;
-    if (/[%^&*()\-_=+\[\]{}|;:,.<>?]/.test(password)) charsetSize += 22;
+    // Calculate charset size based on selected options
+    if (uppercaseCheck.checked) {
+        let upperSize = 26;
+        if (excludeSimilarCheck.checked) {
+            // Remove similar chars: L, O
+            upperSize -= 2;
+        }
+        charsetSize += upperSize;
+    }
+    
+    if (lowercaseCheck.checked) {
+        let lowerSize = 26;
+        if (excludeSimilarCheck.checked) {
+            // Remove similar chars: i, l, o
+            lowerSize -= 3;
+        }
+        charsetSize += lowerSize;
+    }
+    
+    if (numbersCheck.checked) {
+        let numberSize = 10;
+        if (excludeSimilarCheck.checked) {
+            // Remove similar chars: 1, 0
+            numberSize -= 2;
+        }
+        charsetSize += numberSize;
+    }
+    
+    if (symbolsSimpleCheck.checked) {
+        // Simple symbols (!@#$) don't have similar characters
+        charsetSize += 4;
+    }
+    
+    if (symbolsComplexCheck.checked) {
+        // Complex symbols don't have similar characters
+        charsetSize += 22;
+    }
     
     const passwordLength = password.length;
     const combinations = Math.pow(charsetSize, passwordLength);
