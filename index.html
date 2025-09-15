@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="toast" id="copyToast">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>Password copied to clipboard!</span>
+    </div>
+    
+    <div class="container">
+        <h1>Password Generator</h1>
+        <div class="password-display">
+            <input type="text" id="passwordOutput" readonly placeholder="Your generated password">
+            <button id="copyBtn" class="copy-btn" title="Copy to clipboard">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="strength-indicator">
+            <span>Password Strength:</span>
+            <div class="strength-bars">
+                <div class="bar" id="bar1"></div>
+                <div class="bar" id="bar2"></div>
+                <div class="bar" id="bar3"></div>
+                <div class="bar" id="bar4"></div>
+            </div>
+            <span id="strengthText">-</span>
+        </div>
+
+        <div class="settings">
+            <div class="setting">
+                <label for="length">Password Length</label>
+                <div class="length-controls">
+                    <input type="range" id="length" min="4" max="50" value="12">
+                    <input type="number" id="lengthInput" min="4" max="50" value="12">
+                </div>
+            </div>
+
+            <div class="setting">
+                <label>
+                    <input type="checkbox" id="uppercase" checked>
+                    Include Uppercase Letters (A-Z)
+                </label>
+            </div>
+
+            <div class="setting">
+                <label>
+                    <input type="checkbox" id="lowercase" checked>
+                    Include Lowercase Letters (a-z)
+                </label>
+            </div>
+
+            <div class="setting">
+                <label>
+                    <input type="checkbox" id="numbers" checked>
+                    Include Numbers (0-9)
+                </label>
+            </div>
+
+            <div class="setting">
+                <label>
+                    <input type="checkbox" id="symbolsSimple" checked>
+                    Include Symbols Simple (!@#$)
+                </label>
+            </div>
+
+            <div class="setting">
+                <label>
+                    <input type="checkbox" id="symbolsComplex">
+                    Include Symbols Complex 
+                    <div class="info-icon" id="symbolsComplexInfo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 16v-4"></path>
+                            <path d="M12 8h.01"></path>
+                        </svg>
+                        <div class="tooltip" id="symbolsComplexTooltip">
+                            <div class="tooltip-content">
+                                !@#$%^&*()-_=+[]{}|;:,.<>?
+                            </div>
+                        </div>
+                    </div>
+                </label>
+            </div>
+
+            <div class="setting">
+                <label>
+                    <input type="checkbox" id="excludeSimilar" checked>
+                    Exclude Similar Characters 
+                    <div class="info-icon" id="excludeSimilarInfo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 16v-4"></path>
+                            <path d="M12 8h.01"></path>
+                        </svg>
+                        <div class="tooltip" id="excludeSimilarTooltip">
+                            <div class="tooltip-content">
+                                i, l, 1, L, o, 0, O
+                            </div>
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div class="crack-time">
+            <div class="crack-time-header">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>Estimated Time to Crack</span>
+                <div class="info-icon" id="infoIcon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 16v-4"></path>
+                        <path d="M12 8h.01"></path>
+                    </svg>
+                    <div class="tooltip" id="specTooltip">
+                        <div class="tooltip-header">Analysis Conditions</div>
+                        <div class="tooltip-content">
+                            <div class="spec-item">
+                                <strong>Attack Method:</strong> Brute Force
+                            </div>
+                            <div class="spec-item">
+                                <strong>Hardware:</strong> Modern GPU
+                            </div>
+                            <div class="spec-item">
+                                <strong>Speed:</strong> 10 billion attempts/sec
+                            </div>
+                            <div class="spec-item">
+                                <strong>Reference:</strong> NVIDIA RTX 4090 class
+                            </div>
+                            <div class="spec-note">
+                                Times represent worst-case scenarios for complete brute force attacks.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="crack-time-display">
+                <div class="time-value" id="crackTime">Calculating...</div>
+                <div class="time-details">
+                    <span>Character Set: <strong id="charsetSize">0</strong> characters</span>
+                    <span>Combinations: <strong id="combinations">0</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
