@@ -119,10 +119,18 @@ body {
 h1 {
     color: #00ff00;
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     font-size: 2rem;
     text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
     font-weight: bold;
+}
+
+.subtitle {
+    color: #00cc00;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+    opacity: 0.8;
 }
 
 .password-display {
