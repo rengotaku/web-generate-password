@@ -1,0 +1,12 @@
+name = "web-generate-password"
+compatibility_date = "2024-09-16"
+
+[env.production]
+name = "web-generate-password"
+
+[env.preview]
+name = "web-generate-password-preview"
+
+# Static site configuration
+# Since this is a static HTML/CSS/JS project, no build command is needed
+# Files will be served directly from the root directory

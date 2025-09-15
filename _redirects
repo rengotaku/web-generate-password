@@ -1,0 +1,3 @@
+# Redirects for SPA behavior
+# Since this is a static site, we mainly handle 404s
+/* /index.html 404
