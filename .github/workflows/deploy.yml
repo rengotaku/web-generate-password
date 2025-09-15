@@ -1,34 +1,178 @@
-name: Deploy to Cloudflare Pages
+name: Build and Deploy Password Generator
 
 on:
   push:
-    branches:
-      - main
+    branches: [ '**' ]  # All branches - build check only
   pull_request:
-    branches:
-      - main
+    branches: [ '**' ]   # All PRs - preview deployment for non-main branches
 
 jobs:
-  deploy:
+  build:
+    name: Build Check
     runs-on: ubuntu-latest
-    name: Deploy to Cloudflare Pages
+    if: github.event_name == 'push'
     
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+      - name: Validate static files
+        run: |
+          echo "✅ Validating HTML structure..."
+          if ! grep -q "<title>" index.html; then
+            echo "❌ Missing title tag in index.html"
+            exit 1
+          fi
+          echo "✅ Validating CSS file..."
+          if [ ! -f "style.css" ]; then
+            echo "❌ Missing style.css file"
+            exit 1
+          fi
+          echo "✅ Validating JavaScript file..."
+          if [ ! -f "script.js" ]; then
+            echo "❌ Missing script.js file"
+            exit 1
+          fi
+          echo "✅ All static files validated successfully"
+          
+      - name: Notify Slack on Build Success
+        if: success() && github.ref == 'refs/heads/main'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          text: |
+            ✅ *Password Generator ビルド成功*
+            
+            📝 **詳細:**
+            • **ブランチ:** `${{ github.ref_name }}`
+            • **コミット:** `${{ github.sha }}`
+            • **作成者:** ${{ github.actor }}
+            
+            🔗 **リンク:**
+            • [Commit](${{ github.event.head_commit.url }})
+            • [Action](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
+      - name: Notify Slack on Build Failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#deployments'
+          text: |
+            ❌ *Password Generator ビルド失敗*
+            
+            📝 **詳細:**
+            • **ブランチ:** `${{ github.ref_name }}`
+            • **コミット:** `${{ github.sha }}`
+            • **作成者:** ${{ github.actor }}
+            
+            🔗 **リンク:**
+            • [失敗したAction](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            • [Commit](${{ github.event.head_commit.url }})
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: build
+    
+    permissions:
+      contents: read
+      deployments: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+          
+      - name: Deploy to Cloudflare Pages (Production)
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: web-generate-password
-          directory: ./
-          # Build settings (not needed for static sites, but can be customized)
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: pages deploy . --project-name=web-generate-password
+          
+      - name: Notify Slack on Production Deploy Success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          text: |
+            🚀 *Password Generator 本番デプロイ成功* 
+            
+            📝 **詳細:**
+            • **環境:** Production (https://password-generator.v41.me)
+            • **ブランチ:** `${{ github.ref_name }}`
+            • **コミット:** `${{ github.sha }}`
+            • **作成者:** ${{ github.actor }}
+            
+            🔗 **リンク:**
+            • [Live Site](https://password-generator.v41.me)
+            • [Commit](${{ github.event.head_commit.url }})
+            • [Action](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
+      - name: Notify Slack on Production Deploy Failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#deployments'
+          text: |
+            ❌ *Password Generator 本番デプロイ失敗*
+            
+            📝 **詳細:**
+            • **環境:** Production
+            • **ブランチ:** `${{ github.ref_name }}`
+            • **コミット:** `${{ github.sha }}`
+            • **作成者:** ${{ github.actor }}
+            
+            🔗 **リンク:**
+            • [失敗したAction](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            • [Commit](${{ github.event.head_commit.url }})
+            
+            🛠️ **対応が必要です**
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  deploy-preview:
+    name: Deploy to Preview
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Validate static files
+        run: |
+          echo "✅ Validating HTML structure..."
+          if ! grep -q "<title>" index.html; then
+            echo "❌ Missing title tag in index.html"
+            exit 1
+          fi
+          echo "✅ All static files validated successfully"
+          
+      - name: Deploy to Cloudflare Pages (Preview)
+        uses: cloudflare/wrangler-action@v3
+        id: deploy
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy . --project-name=web-generate-password
           
       - name: Add deployment status comment
-        if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
@@ -36,5 +180,61 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '🚀 Cloudflare Pages deployment completed!'
+              body: `🚀 **Password Generator Preview デプロイ完了**
+              
+              📝 **詳細:**
+              • **環境:** Preview
+              • **PR:** #${{ github.event.number }} - ${{ github.event.pull_request.title }}
+              • **ブランチ:** \`${{ github.head_ref }}\`
+              • **作成者:** ${{ github.actor }}
+              
+              🔗 **リンク:**
+              • [Preview サイト](https://web-generate-password-preview.pages.dev)
+              • [本番サイト](https://password-generator.v41.me)
+              • [Action](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`
             })
+          
+      - name: Notify Slack on Preview Deploy Success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'  
+          text: |
+            🔍 *Password Generator プレビューデプロイ成功*
+            
+            📝 **詳細:**
+            • **環境:** Preview
+            • **PR:** #${{ github.event.number }} - ${{ github.event.pull_request.title }}
+            • **ブランチ:** `${{ github.head_ref }}`
+            • **作成者:** ${{ github.actor }}
+            
+            🔗 **リンク:**
+            • [Preview サイト](https://web-generate-password-preview.pages.dev)
+            • [PR](${{ github.event.pull_request.html_url }})
+            • [Action](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
+      - name: Notify Slack on Preview Deploy Failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#deployments'
+          text: |
+            ❌ *Password Generator プレビューデプロイ失敗*
+            
+            📝 **詳細:**
+            • **環境:** Preview
+            • **PR:** #${{ github.event.number }} - ${{ github.event.pull_request.title }}
+            • **ブランチ:** `${{ github.head_ref }}`
+            • **作成者:** ${{ github.actor }}
+            
+            🔗 **リンク:**
+            • [失敗したAction](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            • [PR](${{ github.event.pull_request.html_url }})
+            
+            🛠️ **対応が必要です**
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

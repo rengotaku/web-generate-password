@@ -3,6 +3,9 @@ compatibility_date = "2024-09-16"
 
 [env.production]
 name = "web-generate-password"
+# Custom domain configuration for production
+# Domain: password-generator.v41.me
+# Configured in Cloudflare Pages dashboard
 
 [env.preview]
 name = "web-generate-password-preview"
@@ -10,3 +13,7 @@ name = "web-generate-password-preview"
 # Static site configuration
 # Since this is a static HTML/CSS/JS project, no build command is needed
 # Files will be served directly from the root directory
+
+# Custom domain configuration
+# Production: https://password-generator.v41.me
+# Preview: https://web-generate-password-preview.pages.dev
