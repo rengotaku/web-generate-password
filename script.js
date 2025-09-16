@@ -13,14 +13,14 @@ const symbolsComplexCheck = document.getElementById('symbolsComplex');
 symbolsSimpleCheck.addEventListener('change', function() {
     if (this.checked && symbolsComplexCheck.checked) {
         symbolsComplexCheck.checked = false;
-        generateAndUpdate();
+        regeneratePassword();
     }
 });
 
 symbolsComplexCheck.addEventListener('change', function() {
     if (this.checked && symbolsSimpleCheck.checked) {
         symbolsSimpleCheck.checked = false;
-        generateAndUpdate();
+        regeneratePassword();
     }
 });
 const excludeSimilarCheck = document.getElementById('excludeSimilar');
@@ -377,7 +377,7 @@ function copyToClipboard(text) {
 
 regenerateBtn.addEventListener('click', () => {
     regenerateBtn.classList.add('regenerating');
-    generateAndUpdate();
+    regeneratePassword();
     setTimeout(() => {
         regenerateBtn.classList.remove('regenerating');
     }, 500);
