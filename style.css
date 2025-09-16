@@ -38,6 +38,11 @@
     }
 }
 
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 
 
 
@@ -159,7 +164,8 @@ h1 {
     box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
 }
 
-.copy-btn {
+.copy-btn,
+.regenerate-btn {
     padding: 0 1rem;
     background: #001100;
     color: #00ff00;
@@ -171,13 +177,15 @@ h1 {
     align-items: center;
 }
 
-.copy-btn:hover {
+.copy-btn:hover,
+.regenerate-btn:hover {
     background: #003300;
     box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
     transform: translateY(-1px);
 }
 
-.copy-btn:active {
+.copy-btn:active,
+.regenerate-btn:active {
     transform: translateY(0);
 }
 
@@ -185,6 +193,10 @@ h1 {
     background: #004400;
     animation: pulse 0.3s ease;
     box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
+}
+
+.regenerate-btn.regenerating {
+    animation: spin 0.5s ease;
 }
 
 .copy-effect {

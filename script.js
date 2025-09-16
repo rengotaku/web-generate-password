@@ -1,5 +1,6 @@
 const passwordOutput = document.getElementById('passwordOutput');
 const copyBtn = document.getElementById('copyBtn');
+const regenerateBtn = document.getElementById('regenerateBtn');
 const lengthSlider = document.getElementById('length');
 const lengthInput = document.getElementById('lengthInput');
 const uppercaseCheck = document.getElementById('uppercase');
@@ -7,6 +8,21 @@ const lowercaseCheck = document.getElementById('lowercase');
 const numbersCheck = document.getElementById('numbers');
 const symbolsSimpleCheck = document.getElementById('symbolsSimple');
 const symbolsComplexCheck = document.getElementById('symbolsComplex');
+
+// Add mutual exclusion for symbol checkboxes
+symbolsSimpleCheck.addEventListener('change', function() {
+    if (this.checked && symbolsComplexCheck.checked) {
+        symbolsComplexCheck.checked = false;
+        generateAndUpdate();
+    }
+});
+
+symbolsComplexCheck.addEventListener('change', function() {
+    if (this.checked && symbolsSimpleCheck.checked) {
+        symbolsSimpleCheck.checked = false;
+        generateAndUpdate();
+    }
+});
 const excludeSimilarCheck = document.getElementById('excludeSimilar');
 const strengthText = document.getElementById('strengthText');
 const crackTimeEl = document.getElementById('crackTime');
@@ -358,6 +374,14 @@ function copyToClipboard(text) {
         });
     }
 }
+
+regenerateBtn.addEventListener('click', () => {
+    regenerateBtn.classList.add('regenerating');
+    generateAndUpdate();
+    setTimeout(() => {
+        regenerateBtn.classList.remove('regenerating');
+    }, 500);
+});
 
 copyBtn.addEventListener('click', () => {
     if (passwordOutput.value) {
