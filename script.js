@@ -272,11 +272,11 @@ lengthInput.addEventListener('input', () => {
     let value = parseInt(lengthInput.value);
     if (isNaN(value)) return;
     
-    // Clamp value between min and max
-    value = Math.max(4, Math.min(50, value));
-    lengthInput.value = value;
-    lengthSlider.value = value;
-    regeneratePassword();
+    // Only sync with slider if value is within valid range
+    if (value >= 4 && value <= 50) {
+        lengthSlider.value = value;
+        regeneratePassword();
+    }
 });
 
 lengthInput.addEventListener('blur', () => {
