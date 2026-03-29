@@ -26,6 +26,7 @@ symbolsComplexCheck.addEventListener('change', function() {
 const excludeSimilarCheck = document.getElementById('excludeSimilar');
 const strengthText = document.getElementById('strengthText');
 const crackTimeEl = document.getElementById('crackTime');
+const crackTimeQuantumEl = document.getElementById('crackTimeQuantum');
 const charsetSizeEl = document.getElementById('charsetSize');
 const combinationsEl = document.getElementById('combinations');
 
@@ -37,98 +38,100 @@ const symbolComplexChars = '!@#$%^&*()-_=+[]{}|;:,.<>?';
 const similarChars = 'il1Lo0O';
 
 
+function secureRandomIndex(max) {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return array[0] % max;
+}
+
+function secureShuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = secureRandomIndex(i + 1);
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
 function generatePassword() {
     let charset = '';
-    let password = '';
-    
+
     if (uppercaseCheck.checked) charset += uppercaseChars;
     if (lowercaseCheck.checked) charset += lowercaseChars;
     if (numbersCheck.checked) charset += numberChars;
     if (symbolsSimpleCheck.checked) charset += symbolSimpleChars;
     if (symbolsComplexCheck.checked) charset += symbolComplexChars;
-    
+
     if (charset === '') {
-        alert('Please select at least one character type!');
+        alert('少なくとも1つの文字種を選択してください');
         return '';
     }
-    
+
     if (excludeSimilarCheck.checked) {
         charset = charset.split('').filter(char => !similarChars.includes(char)).join('');
     }
-    
+
     const length = parseInt(lengthSlider.value);
-    
+
     const guaranteedChars = [];
     if (uppercaseCheck.checked) {
-        const filteredUpper = excludeSimilarCheck.checked 
+        const filtered = excludeSimilarCheck.checked
             ? uppercaseChars.split('').filter(char => !similarChars.includes(char)).join('')
             : uppercaseChars;
-        guaranteedChars.push(filteredUpper[Math.floor(Math.random() * filteredUpper.length)]);
+        guaranteedChars.push(filtered[secureRandomIndex(filtered.length)]);
     }
     if (lowercaseCheck.checked) {
-        const filteredLower = excludeSimilarCheck.checked 
+        const filtered = excludeSimilarCheck.checked
             ? lowercaseChars.split('').filter(char => !similarChars.includes(char)).join('')
             : lowercaseChars;
-        guaranteedChars.push(filteredLower[Math.floor(Math.random() * filteredLower.length)]);
+        guaranteedChars.push(filtered[secureRandomIndex(filtered.length)]);
     }
     if (numbersCheck.checked) {
-        const filteredNumbers = excludeSimilarCheck.checked 
+        const filtered = excludeSimilarCheck.checked
             ? numberChars.split('').filter(char => !similarChars.includes(char)).join('')
             : numberChars;
-        guaranteedChars.push(filteredNumbers[Math.floor(Math.random() * filteredNumbers.length)]);
+        guaranteedChars.push(filtered[secureRandomIndex(filtered.length)]);
     }
     if (symbolsSimpleCheck.checked) {
-        guaranteedChars.push(symbolSimpleChars[Math.floor(Math.random() * symbolSimpleChars.length)]);
+        guaranteedChars.push(symbolSimpleChars[secureRandomIndex(symbolSimpleChars.length)]);
     }
     if (symbolsComplexCheck.checked) {
-        guaranteedChars.push(symbolComplexChars[Math.floor(Math.random() * symbolComplexChars.length)]);
+        guaranteedChars.push(symbolComplexChars[secureRandomIndex(symbolComplexChars.length)]);
     }
-    
+
+    const chars = [];
     for (let i = guaranteedChars.length; i < length; i++) {
-        password += charset[Math.floor(Math.random() * charset.length)];
+        chars.push(charset[secureRandomIndex(charset.length)]);
     }
-    
-    password = password.split('');
-    guaranteedChars.forEach((char, index) => {
-        const randomPos = Math.floor(Math.random() * (password.length + index + 1));
-        password.splice(randomPos, 0, char);
-    });
-    
-    password = password.slice(0, length).join('');
-    
-    password = password.split('').sort(() => Math.random() - 0.5).join('');
-    
+    chars.push(...guaranteedChars);
+
+    const password = secureShuffleArray(chars).join('');
     return password;
 }
 
 function calculateStrength(seconds) {
-    let strengthLabel = 'Weak';
+    let strengthLabel = '弱い';
     let activeBars = 1;
     let colorClass = 'active-weak';
     let textColor = '#f56565';
-    
-    // Base strength on crack time
+
     if (seconds < 1) {
-        // Less than 1 second - Very Weak
-        strengthLabel = 'Weak';
+        strengthLabel = '弱い';
         activeBars = 1;
         colorClass = 'active-weak';
         textColor = '#f56565';
     } else if (seconds < 86400) {
-        // Less than 1 day - Fair
-        strengthLabel = 'Fair';
+        strengthLabel = 'やや弱い';
         activeBars = 2;
         colorClass = 'active-fair';
         textColor = '#ed8936';
     } else if (seconds < 31536000) {
-        // Less than 1 year - Good
-        strengthLabel = 'Good';
+        strengthLabel = '良好';
         activeBars = 3;
         colorClass = 'active-good';
         textColor = '#ecc94b';
     } else {
-        // 1 year or more - Strong
-        strengthLabel = 'Strong';
+        strengthLabel = '強い';
         activeBars = 4;
         colorClass = 'active-strong';
         textColor = '#48bb78';
@@ -145,6 +148,18 @@ function calculateStrength(seconds) {
     // Update text
     strengthText.textContent = strengthLabel;
     strengthText.style.color = textColor;
+}
+
+function colorByTime(el, seconds) {
+    if (seconds < 1) {
+        el.style.color = '#f56565';
+    } else if (seconds < 86400) {
+        el.style.color = '#ed8936';
+    } else if (seconds < 31536000) {
+        el.style.color = '#ecc94b';
+    } else {
+        el.style.color = '#48bb78';
+    }
 }
 
 function calculateCrackTime(password) {
@@ -180,12 +195,12 @@ function calculateCrackTime(password) {
     
     if (symbolsSimpleCheck.checked) {
         // Simple symbols (!@#$) don't have similar characters
-        charsetSize += 4;
+        charsetSize += symbolSimpleChars.length;
     }
     
     if (symbolsComplexCheck.checked) {
         // Complex symbols don't have similar characters
-        charsetSize += 22;
+        charsetSize += symbolComplexChars.length;
     }
     
     const passwordLength = password.length;
@@ -195,28 +210,22 @@ function calculateCrackTime(password) {
     charsetSizeEl.textContent = charsetSize;
     combinationsEl.textContent = formatNumber(combinations);
     
-    // Calculate time assuming 10 billion attempts per second (modern GPU)
+    // GPU: 10 billion attempts per second
     const attemptsPerSecond = 10000000000;
     const seconds = combinations / attemptsPerSecond;
-    
-    // Format time
-    let timeString = formatTime(seconds);
-    crackTimeEl.textContent = timeString;
-    
-    // Color code based on security
-    if (seconds < 1) {
-        crackTimeEl.style.color = '#f56565';
-    } else if (seconds < 86400) { // Less than 1 day
-        crackTimeEl.style.color = '#ed8936';
-    } else if (seconds < 31536000) { // Less than 1 year
-        crackTimeEl.style.color = '#ecc94b';
-    } else {
-        crackTimeEl.style.color = '#48bb78';
-    }
-    
-    // Update strength based on crack time
+
+    // Quantum: Grover's algorithm reduces search space to sqrt(N)
+    const quantumCombinations = Math.sqrt(combinations);
+    const quantumSeconds = quantumCombinations / attemptsPerSecond;
+
+    crackTimeEl.textContent = formatTime(seconds);
+    crackTimeQuantumEl.textContent = formatTime(quantumSeconds);
+
+    colorByTime(crackTimeEl, seconds);
+    colorByTime(crackTimeQuantumEl, quantumSeconds);
+
     calculateStrength(seconds);
-    
+
     return seconds;
 }
 
@@ -231,26 +240,25 @@ function formatNumber(num) {
 }
 
 function formatTime(seconds) {
-    if (seconds < 0.001) return 'Instant';
-    if (seconds < 1) return Math.floor(seconds * 1000) + ' milliseconds';
-    if (seconds < 60) return Math.floor(seconds) + ' seconds';
-    if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes';
-    if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours';
-    if (seconds < 2592000) return Math.floor(seconds / 86400) + ' days';
-    if (seconds < 31536000) return Math.floor(seconds / 2592000) + ' months';
-    if (seconds < 315360000) return Math.floor(seconds / 31536000) + ' years';
-    if (seconds < 3153600000) return Math.floor(seconds / 315360000) + ' decades';
-    if (seconds < 31536000000) return Math.floor(seconds / 3153600000) + ' centuries';
-    if (seconds < 315360000000) return Math.floor(seconds / 31536000000) + ' millennia';
-    
-    // For extremely large numbers
+    if (seconds < 0.001) return '一瞬';
+    if (seconds < 1) return Math.floor(seconds * 1000) + ' ミリ秒';
+    if (seconds < 60) return Math.floor(seconds) + ' 秒';
+    if (seconds < 3600) return Math.floor(seconds / 60) + ' 分';
+    if (seconds < 86400) return Math.floor(seconds / 3600) + ' 時間';
+    if (seconds < 2592000) return Math.floor(seconds / 86400) + ' 日';
+    if (seconds < 31536000) return Math.floor(seconds / 2592000) + ' ヶ月';
+
     const years = seconds / 31536000;
-    if (years < 1e6) return formatNumber(years) + ' years';
-    if (years < 1e9) return formatNumber(years / 1e6) + ' million years';
-    if (years < 1e12) return formatNumber(years / 1e9) + ' billion years';
-    if (years < 1e15) return formatNumber(years / 1e12) + ' trillion years';
-    
-    return 'Virtually impossible';
+    return formatYears(years);
+}
+
+function formatYears(years) {
+    if (years < 1e4) return Math.floor(years).toLocaleString() + ' 年';
+    if (years < 1e8) return (years / 1e4).toFixed(1).replace(/\.0$/, '') + ' 万年';
+    if (years < 1e12) return (years / 1e8).toFixed(1).replace(/\.0$/, '') + ' 億年';
+    if (years < 1e16) return (years / 1e12).toFixed(1).replace(/\.0$/, '') + ' 兆年';
+    if (years < 1e20) return (years / 1e16).toFixed(1).replace(/\.0$/, '') + ' 京年';
+    return '事実上不可能';
 }
 
 function regeneratePassword() {
@@ -376,10 +384,11 @@ function copyToClipboard(text) {
 }
 
 regenerateBtn.addEventListener('click', () => {
-    regenerateBtn.classList.add('regenerating');
+    const svg = regenerateBtn.querySelector('svg');
+    svg.classList.add('regenerating');
     regeneratePassword();
     setTimeout(() => {
-        regenerateBtn.classList.remove('regenerating');
+        svg.classList.remove('regenerating');
     }, 500);
 });
 
@@ -446,7 +455,7 @@ copyBtn.addEventListener('click', () => {
                     `;
                 }, 2000);
             } else {
-                alert('Failed to copy password. Please copy manually.');
+                alert('コピーに失敗しました。手動でコピーしてください。');
             }
         });
     }

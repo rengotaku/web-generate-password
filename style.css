@@ -144,6 +144,11 @@ h1 {
     margin-bottom: 1.5rem;
 }
 
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
 #passwordOutput {
     flex: 1;
     padding: 1rem;
@@ -195,7 +200,7 @@ h1 {
     box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
 }
 
-.regenerate-btn.regenerating {
+.regenerate-btn svg.regenerating {
     animation: spin 0.5s ease;
 }
 
@@ -437,10 +442,37 @@ input[type="checkbox"] {
     color: #00ff00;
 }
 
-.crack-time-display {
+.crack-time-columns {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.crack-time-column {
+    flex: 1;
+    text-align: center;
+}
+
+.crack-time-column-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.column-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #00cc00;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.crack-time-divider {
+    width: 1px;
+    background: #00ff00;
+    opacity: 0.4;
 }
 
 .time-value {
@@ -579,17 +611,33 @@ input[type="checkbox"] {
     .container {
         padding: 1.5rem;
     }
-    
+
     h1 {
         font-size: 1.5rem;
     }
-    
+
     .password-display {
         flex-direction: column;
     }
-    
-    .copy-btn {
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .action-buttons .copy-btn,
+    .action-buttons .regenerate-btn {
+        flex: 1;
         padding: 0.75rem;
         justify-content: center;
+    }
+
+    .crack-time-columns {
+        flex-direction: column;
+    }
+
+    .crack-time-divider {
+        width: 100%;
+        height: 1px;
     }
 }
